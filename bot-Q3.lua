@@ -5,8 +5,6 @@ Game = Game or nil
 Range = 1 
 Counter = 0
 
-Logs = Logs or {}
-
 colors = {
   red = "\27[31m",
   green = "\27[32m",
