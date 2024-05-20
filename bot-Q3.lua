@@ -1,4 +1,4 @@
--- 初始化全局变量来存储最新的游戏状态和游戏主机进程。
+
 LatestGameState = LatestGameState or nil
 Game = Game or nil
 Range = 1 
@@ -14,7 +14,7 @@ colors = {
   gray = "\27[90m"
 }
 
-function addLog(msg, text) -- 函数定义注释用于性能，可用于调试
+function addLog(msg, text) 
   Logs[msg] = Logs[msg] or {}
   table.insert(Logs[msg], text)
 end
@@ -55,25 +55,15 @@ function  getDirection(sourceX,sourceY,targetX,targetY)
   return directionX .. directionY
 end
 
--- 检查两个点是否在给定范围内。
--- @param x1, y1: 第一个点的坐标
--- @param x2, y2: 第二个点的坐标
--- @param range: 点之间允许的最大距离
--- @return: Boolean 指示点是否在指定范围内
 function inRange(x1, y1, x2, y2, range)
     return math.abs(x1 - x2) <= range and math.abs(y1 - y2) <= range
 end
 
--- 根据玩家的距离和能量决定下一步行动。
--- 如果有玩家在范围内，则发起攻击； 否则，随机移动。
+
 function decideNextAction()
-  -- 玩家状态
   local player = LatestGameState.Players[ao.id]
-  -- 在范围内触发攻击
   local targetInRange = false
-  -- 标记的玩家血量
   local markedhealthPoints =100
-  -- 标记血量低于攻击能量的玩家
   local markedPlayer =nil
 
   for target, state in pairs(LatestGameState.Players) do
@@ -81,9 +71,9 @@ function decideNextAction()
       if target == ao.id then
          goto continue
       end
-      --  筛选指定范围内健康值小于能量的玩家
+      
       if inRange(player.x, player.y, state.x, state.y, 2) and state.health <= player.energy then
-          -- 标记血量低于标记玩家血量的玩家
+          
           if state.health  < markedhealthPoints then
             markedhealthPoints=state.health
             markedPlayer= target
@@ -91,7 +81,7 @@ function decideNextAction()
       end
 
       if inRange(player.x, player.y, state.x, state.y, Range) and markedPlayer then
-        -- 进入攻击范围
+       
         targetInRange = true
       end 
       ::continue::
@@ -116,7 +106,7 @@ function decideNextAction()
   end
 end
 
--- 打印游戏公告并触发游戏状态更新的handler。
+
 Handlers.add(
   "PrintAnnouncements",
   Handlers.utils.hasMatchingTag("Action", "Announcement"),
@@ -127,7 +117,7 @@ Handlers.add(
   end
 )
 
--- 触发游戏状态更新的handler。
+
 Handlers.add(
   "GetGameStateOnTick",
   Handlers.utils.hasMatchingTag("Action", "Tick"),
@@ -139,7 +129,7 @@ Handlers.add(
 )
 
 
--- 接收游戏状态信息后更新游戏状态的handler。
+
 Handlers.add(
   "UpdateGameState",
   Handlers.utils.hasMatchingTag("Action", "GameState"),
@@ -152,7 +142,7 @@ Handlers.add(
   end
 )
 
--- 决策下一个最佳操作的handler。
+
 Handlers.add(
   "decideNextAction",
   Handlers.utils.hasMatchingTag("Action", "UpdatedGameState"),
@@ -163,7 +153,6 @@ Handlers.add(
   end
 )
 
--- 被其他玩家击中时自动攻击的handler。
 Handlers.add(
   "ReturnAttack",
   Handlers.utils.hasMatchingTag("Action", "Hit"),
