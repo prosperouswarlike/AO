@@ -1,8 +1,9 @@
-
+-- Initializing global variables to store the latest game state and game host process.
 LatestGameState = LatestGameState or nil
+-- Game 
 Game = Game or nil
 Range = 1 
-
+Counter = 0
 
 Logs = Logs or {}
 
@@ -14,11 +15,7 @@ colors = {
   gray = "\27[90m"
 }
 
-function addLog(msg, text) 
-  Logs[msg] = Logs[msg] or {}
-  table.insert(Logs[msg], text)
-end
-
+-- Distance calculation function
 function adjustPosition(point1,point2)
   if math.abs(point1 - point2) > 20 then
     if point1 < 20 and point2 >= 20 then
@@ -33,7 +30,7 @@ function adjustPosition(point1,point2)
   return point1, point2
 end
 
-
+-- Get the direction of movement
 function  getDirection(sourceX,sourceY,targetX,targetY)
   sourceX,targetX = adjustPosition( sourceX,targetX)
   sourceY,targetY = adjustPosition(sourceY,targetY)
@@ -55,15 +52,23 @@ function  getDirection(sourceX,sourceY,targetX,targetY)
   return directionX .. directionY
 end
 
+-- Checks if two points are within a given range.
+-- @param x1, y1: Coordinates of the first point.
+-- @param x2, y2: Coordinates of the second point.
+-- @param range: The maximum allowed distance between the points.
+-- @return: Boolean indicating if the points are within the specified range.
 function inRange(x1, y1, x2, y2, range)
     return math.abs(x1 - x2) <= range and math.abs(y1 - y2) <= range
 end
 
-
+-- Decides the next action based on player proximity and energy.
+-- If any player is within range, it initiates an attack; otherwise, moves randomly.
 function decideNextAction()
   local player = LatestGameState.Players[ao.id]
-  local targetInRange = false
+  local targetInRange = false  
+  -- Marked player points default 100.
   local markedhealthPoints =100
+  --  Marked player
   local markedPlayer =nil
 
   for target, state in pairs(LatestGameState.Players) do
@@ -73,16 +78,15 @@ function decideNextAction()
       end
       
       if inRange(player.x, player.y, state.x, state.y, 2) and state.health <= player.energy then
-          
+          -- Player's score is less than the marked player's score, then update.
           if state.health  < markedhealthPoints then
             markedhealthPoints=state.health
             markedPlayer= target
           end       
       end
 
-      if inRange(player.x, player.y, state.x, state.y, Range) and markedPlayer then
-       
-        targetInRange = true
+      if inRange(player.x, player.y, state.x, state.y, Range) and markedPlayer then       
+          targetInRange = true
       end 
       ::continue::
   end
@@ -93,6 +97,7 @@ function decideNextAction()
   else
     local moveDirection = nil
     if markedPlayer then
+      -- Move towards the direction of the marked player
       moveDirection = getDirection(player.x,player.y,markedPlayer.x,markedPlayer.y)
        print(colors.red .. "Move towards the direction of the marked player." .. colors.reset)
     else
@@ -106,7 +111,7 @@ function decideNextAction()
   end
 end
 
-
+-- Handler to print game announcements and trigger game state updates
 Handlers.add(
   "PrintAnnouncements",
   Handlers.utils.hasMatchingTag("Action", "Announcement"),
@@ -117,7 +122,7 @@ Handlers.add(
   end
 )
 
-
+-- Handler to trigger game state updates
 Handlers.add(
   "GetGameStateOnTick",
   Handlers.utils.hasMatchingTag("Action", "Tick"),
@@ -128,8 +133,7 @@ Handlers.add(
   end
 )
 
-
-
+-- Handler to update the game state upon receiving game state information
 Handlers.add(
   "UpdateGameState",
   Handlers.utils.hasMatchingTag("Action", "GameState"),
@@ -142,7 +146,7 @@ Handlers.add(
   end
 )
 
-
+-- Handler to decide the next best action
 Handlers.add(
   "decideNextAction",
   Handlers.utils.hasMatchingTag("Action", "UpdatedGameState"),
@@ -153,6 +157,7 @@ Handlers.add(
   end
 )
 
+-- Handler to automatically attack when hit by another player.
 Handlers.add(
   "ReturnAttack",
   Handlers.utils.hasMatchingTag("Action", "Hit"),
